@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>canvas-image</title>
+</head>
+<body>
+<div class="add">放大</div>
+<div class="release">缩小</div>
+<canvas id="canvas" style="display: block;margin: 0 auto;border: 1px solid #aaa"></canvas>
+<canvas id="water" style="display: none"></canvas>
+<canvas id="off-canvas"  style="display: none"></canvas>
+<script>
+    var canvas= document.getElementById('canvas');
+    var water = document.getElementById('water');
+    var waterContext = water.getContext('2d');
+    var offCanvas = document.getElementById('off-canvas');
+    var offCanvasContext = offCanvas.getContext('2d');
+    var context = canvas.getContext('2d');
+    var scale =  3;
+    var imgScale = 1
+    var image = new Image();
+    window.onload = function () {
+      var initScale = 1
+      var isMouseDown = false
+      image.src= 'p1.JPG'
+      // 图片加载时候开始绘制图片。canvas会自动裁剪溢出的图片。
+      image.onload = function() {
+        //drawImage img,x,y,w,h
+        dramImageByScale(1)
+        offCanvas.width=image.width*3
+        offCanvas.height = image.height*3
+        offCanvasContext.drawImage(image,0,0,offCanvas.width,offCanvas.height)
+      }
+      function dramImageByScale(scale) {
+        imgScale=scale
+        var imgWidth = image.width
+        var imgHeight = image.height
+        canvas.width = imgWidth;
+        canvas.height = imgHeight;
+        var width = imgWidth*scale;
+        var height = imgHeight*scale;
+        var sx = canvas.width/2-width/2
+        var sy = canvas.height/2 - height/2
+        context.clearRect(0,0,canvas.width,canvas.height)
+        context.drawImage(image,sx,sy,width,height)
+        context.drawImage(water,canvas.width-water.width,canvas.height-water.height)
+      }
+      document.getElementsByClassName('add')[0].addEventListener('click',function(){
+        initScale +=0.1;
+        context.clearRect(0,0,canvas.width,canvas.height);
+        dramImageByScale(initScale)
+      })
+      document.getElementsByClassName('release')[0].addEventListener('click',function(){
+        initScale-=0.1;
+        context.clearRect(0,0,canvas.width,canvas.height);
+        dramImageByScale(initScale)
+      })
+      //设置水印
+      water.width= 600
+      water.height = 100
+      waterContext.font='bold 50px Arial'
+      waterContext.lineWidth="1"
+      waterContext.fillStyle="red"
+      waterContext.textBaseline = 'middle';
+      waterContext.fillText('== liuyubobobo.com ==',20,50)
+      //设置放大镜的显示位置
+      function getCanvasObj(canvas,x,y) {
+        var box = canvas.getBoundingClientRect()
+        return {
+          x: x-box.left,
+          y: y-box.top
+        }
+      }
+      canvas.onmousedown = function(e) {
+        e.preventDefault()
+        isMouseDown = true;
+        var point = getCanvasObj(canvas,e.clientX,e.clientY);
+       drawBig(true,point)
+      }
+      canvas.onmousemove = function(e) {
+        e.preventDefault()
+        if(isMouseDown) {
+          var point = getCanvasObj(canvas,e.clientX,e.clientY);
+          drawBig(true,point)
+        }
+      }
+      canvas.onmouseup = function(e) {
+        e.preventDefault()
+        isMouseDown = false
+        drawBig(false)
+      }
+      canvas.onmouseout = function(e){
+        e.preventDefault()
+        isMouseDown = false;
+        drawBig(false)
+      }
+      // 绘制放大镜
+      function drawBig(is,point) {
+        context.clearRect(0,0,canvas.width,canvas.height);
+        context.drawImage(image,0,0,image.width,image.height )
+        if(is) {
+          var imgX = point.x*scale;
+          var imgY = point.y*scale;
+          var mr = 100;
+          var sx = imgX-mr;
+          var sy = imgY-mr
+          var dx = point.x - mr
+          var dy = point.y - mr
+          context.drawImage(offCanvas,sx,sy,2*mr,2*mr,dx,dy,2*mr,2*mr)
+        }
+      }
+    }
+</script>
+</body>
+</html>
